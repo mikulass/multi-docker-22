@@ -1,0 +1,24 @@
+sudo: required
+language: generic
+
+services:
+  - docker
+
+before_install:
+  - docker build -t mikulass/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true mikulass/react-test npm test
+
+after_success:
+  - docker build -t mikulass/multi-client-22 ./client
+  - docker build -t mikulass/multi-nginx-22 ./nginx
+  - docker build -t mikulass/multi-server-22 ./server
+  - docker build -t mikulass/multi-worker-22 ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push mikulass/multi-client-22
+  - docker push mikulass/multi-nginx-22
+  - docker push mikulass/multi-server-22
+  - docker push mikulass/multi-worker-22
